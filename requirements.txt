@@ -1,0 +1,18 @@
+sentence-transformers
+faiss-cpu
+rank-bm25
+pypdf
+streamlit
+pandas
+chromadb
+
+# API and environment
+groq
+python-dotenv
+openai
+
+# RAGAS evaluation
+ragas>=0.4,<1
+instructor
+langchain-community
+langchain-huggingface

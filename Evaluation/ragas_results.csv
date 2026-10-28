@@ -1,0 +1,238 @@
+question,generated_answer,retrieved_contexts,faithfulness,answer_relevancy,context_precision,error
+What is self-attention?,"**Self‑attention** is the core operation in transformer models that lets every token in a sequence “look at” every other token to compute a context‑aware representation.  
+In the standard formulation (see the lecture slides, pages 48–53), the process is:
+
+1. **Query, Key, Value projection** – each token’s embedding is linearly projected to three vectors: a query \(Q\), a key \(K\), and a value \(V\).  
+2. **Similarity matrix \(S\)** – the dot product of all queries with all keys produces a similarity matrix \(S = QK^{\top}\) (page 51).  
+3. **Attention weights** – \(S\) is scaled (by \(\sqrt{d_k}\)) and passed through a softmax to obtain a probability distribution over tokens.  
+4. **Weighted sum** – each token’s output is the sum of the values weighted by these probabilities: \(\text{output} = \text{softmax}(S)V\).  
+5. **Memory‑aware implementation** – the lecture notes also discuss efficient execution (FlashAttention, Dao et al., 2022) where \(S\) is written to and read from high‑bandwidth memory (HBM) to reduce I/O overhead (pages 52–53).
+
+Thus, self‑attention computes a context‑dependent representation for each token by aggregating information from all tokens in the sequence, weighted by learned similarity scores.","Standard self-attention computation
+""FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness"", Dao et al., 2022.
+Context. ""Standard"" self-attention computation
+
+
+---
+
+Standard self-attention computation
+""FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness"", Dao et al., 2022.
+Context. ""Standard"" self-attention computation
+
+---
+
+""FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness"", Dao et al., 2022.
+WRITE S to HBM
+Standard self-attention computation
+
+---
+
+""FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness"", Dao et al., 2022.
+READ S from HBM
+Standard self-attention computation
+
+---
+
+""FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness"", Dao et al., 2022.
+Compute S
+🔄
+Standard self-attention computation",0.125,0.6928331755022127,0.99999999998,
+Explain Multi-head attention?,"**Multi‑head attention** lets a Transformer attend to information from several representation sub‑spaces simultaneously.  
+1. **Parallel heads** – For each head *i* we project the query, key, and value vectors with distinct matrices  
+   \[
+   Q_i = QW_{Qi},\; K_i = KW_{Ki},\; V_i = VW_{Vi}
+   \]  
+   and compute a standard scaled‑dot‑product attention (attention(Q_i, K_i, V_i)).  
+2. **Concatenation & projection** – The outputs of all *h* heads are concatenated and linearly projected back to the model dimension:  
+   \[
+   \text{MultiHead}(Q,K,V)=\text{Concat}(head_1,\dots,head_h)W_O
+   \]  
+   (attention_is_all_you_need.pdf, p. 5).  
+3. **Why it matters** – A single head averages over all sub‑spaces, which can dilute important signals. Multiple heads allow the model to learn distinct “attention patterns” (e.g., syntactic vs. semantic cues). The reduced dimensionality per head keeps the overall computational cost comparable to a single‑head attention with full dimensionality (attention_is_all_you_need.pdf, p. 5).  
+4. **Practical example** – In the original Transformer we use *h = 8* heads, each with \(d_k=d_v=d_{\text{model}}/h=64\) when \(d_{\text{model}}=512\) (attention_is_all_you_need.pdf, p. 5).  
+5. **Relation to other tricks** – Multi‑head attention is often paired with techniques like Group‑Query or Multi‑Query attention to share parameters across heads, reducing memory usage (fall25‑cme295‑lecture2.pdf, pp. 53‑54).  
+
+Thus, multi‑head attention is a core mechanism that enables Transformers to capture diverse contextual relationships efficiently.","output values. These are concatenated and once again projected, resulting in the final values, as
+depicted in Figure 2.
+Multi-head attention allows the model to jointly attend to information from different representation
+subspaces at different positions. With a single attention head, averaging inhibits this.
+MultiHead(Q, K, V) = Concat(head1, ...,headh)W O
+where headi = Attention(QW Qi , KWKi , V WVi )
+Where the projections are parameter matricesW Qi ∈ Rdmodel×dk, W Ki ∈ Rdmodel×dk, W Vi ∈ Rdmodel×dv
+and W O ∈ Rhdv×dmodel.
+In this work we employ h = 8 parallel attention layers, or heads. For each of these we use
+dk = dv = dmodel/h = 64. Due to the reduced dimension of each head, the total computational cost
+is similar to that of single-head attention with full dimensionality.
+3.2.3 Applications of Attention in our Model
+The Transformer uses multi-head attention in three different ways:
+• In ""encoder-decoder attention"" layers, the queries come from the previous decoder layer,
+and the me
+
+---
+
+Computational tricks
+Multi-head attention
+Idea:
+● Run multiple self-attention layers in parallel
+Beneﬁts:
+● Enables the model to capture diﬀerent 
+attention features in parallel
+● Comparison: multiple ﬁlters of a convolutional 
+layer in computer vision
+Left ﬁgure adapted from “Attention Is All Y ou Need”, Vaswani et al., 2017. Right ﬁgure from “VIP cheatsheets for Stanford’s CS 230”, Amidi, 2019.
+
+---
+
+Sharing attention heads
+Figure from ""Super Study Guide: Transformers & Large Language Models"", Amidi et al., 2024.
+Multi-Head Attention 
+(MHA)
+Group-Query Attention 
+(GQA)
+Multi-Query Attention 
+(MQA)
+
+
+---
+
+Sharing attention heads
+Figure from ""Super Study Guide: Transformers & Large Language Models"", Amidi et al., 2024.
+Multi-Head Attention 
+(MHA)
+Group-Query Attention 
+(GQA)
+Multi-Query Attention 
+(MQA)
+
+
+---
+
+Sharing attention heads
+Figure from ""Super Study Guide: Transformers & Large Language Models"", Amidi et al., 2024.
+Multi-Head Attention 
+(MHA)
+Group-Query Attention 
+(GQA)
+Multi-Query Attention 
+(MQA)
+",0.6666666666666666,0.8012317320963499,0.99999999995,
+How does BERT differs from GPT?,"**Direct answer**  
+BERT and GPT differ mainly in their attention direction, pre‑training objectives, and how they use special tokens.
+
+- **Attention direction** – BERT’s Transformer is *bidirectional*; every token can attend to all other tokens in the sequence (BERT.pdf, p. 3). GPT’s Transformer is *causal* (left‑to‑right); each token can attend only to preceding tokens (BERT.pdf, p. 3).  
+- **Pre‑training tasks** – BERT trains on *Masked Language Modeling* (MLM) and *Next‑Sentence Prediction* (NSP), which jointly expose the model to both left and right context (BERT.pdf, p. 13). GPT trains on a standard left‑to‑right language modeling objective, predicting the next token (BERT.pdf, p. 14).  
+- **Special tokens** – BERT learns the `[CLS]` and `[SEP]` tokens during pre‑training, embedding sentence‑pair information (BERT.pdf, p. 14). GPT introduces these tokens only at fine‑tuning time (BERT.pdf, p. 14).  
+- **Training data** – BERT uses BooksCorpus (800 M words) plus Wikipedia (2.5 B words), whereas GPT uses only BooksCorpus (800 M words) (BERT.pdf, p. 14).  
+- **Model usage** – Both are fine‑tuning approaches, but BERT’s representations are jointly conditioned on full context in every layer, whereas GPT’s are conditioned only on the left context (BERT.pdf, p. 13).
+
+These architectural and objective differences explain why BERT often outperforms GPT on tasks that benefit from full‑sentence context, such as GLUE and SQuAD (BERT.pdf, p. 6).","comparable existing pre-training
+method to BERT is OpenAI GPT, which trains a
+left-to-right Transformer LM on a large text cor-
+pus. In fact, many of the design decisions in BERT
+were intentionally made to make it as close to
+GPT as possible so that the two methods could be
+minimally compared. The core argument of this
+work is that the bi-directionality and the two pre-
+training tasks presented in Section 3.1 account for
+the majority of the empirical improvements, but
+we do note that there are several other differences
+between how BERT and GPT were trained:
+• GPT is trained on the BooksCorpus (800M
+words); BERT is trained on the BooksCor-
+pus (800M words) and Wikipedia (2,500M
+words).
+• GPT uses a sentence separator ( [SEP]) and
+classiﬁer token ( [CLS]) which are only in-
+troduced at ﬁne-tuning time; BERT learns
+[SEP], [CLS] and sentence A/B embed-
+dings during pre-training.
+• GPT was trained for 1M steps with a batch
+size of 32,000 words; BERT was trained for
+1M steps with a batch siz
+
+---
+
+as OpenAI GPT for comparison purposes.
+Critically, however, the BERT Transformer uses
+bidirectional self-attention, while the GPT Trans-
+former uses constrained self-attention where every
+token can only attend to context to its left.4
+1https://github.com/tensorﬂow/tensor2tensor
+2http://nlp.seas.harvard.edu/2018/04/03/attention.html
+3In all cases we set the feed-forward/ﬁlter size to be 4H,
+i.e., 3072 for the H = 768 and 4096 for the H = 1024.
+4We note that in the literature the bidirectional Trans-
+
+---
+
+in, obtaining
+4.5% and 7.0% respective average accuracy im-
+provement over the prior state of the art. Note that
+BERTBASE and OpenAI GPT are nearly identical
+in terms of model architecture apart from the at-
+tention masking. For the largest and most widely
+reported GLUE task, MNLI, BERT obtains a 4.6%
+absolute accuracy improvement. On the ofﬁcial
+GLUE leaderboard10, BERTLARGE obtains a score
+of 80.5, compared to OpenAI GPT, which obtains
+72.8 as of the date of writing.
+We ﬁnd that BERT LARGE signiﬁcantly outper-
+forms BERTBASE across all tasks, especially those
+with very little training data. The effect of model
+size is explored more thoroughly in Section 5.2.
+4.2 SQuAD v1.1
+The Stanford Question Answering Dataset
+(SQuAD v1.1) is a collection of 100k crowd-
+sourced question/answer pairs (Rajpurkar et al.,
+2016). Given a question and a passage from
+9The GLUE data set distribution does not include the Test
+labels, and we only made a single GLUE evaluation server
+submission for each of BE
+
+---
+
+BERT (Ours)
+Trm Trm Trm
+Trm Trm Trm
+...
+...
+Trm Trm Trm
+Trm Trm Trm
+...
+...
+OpenAI GPT
+Lstm
+ELMo
+Lstm Lstm
+Lstm Lstm Lstm
+Lstm Lstm Lstm
+Lstm Lstm Lstm
+ T1 T2  TN...
+...
+...
+...
+...
+ E1 E2  EN...
+ T1 T2 TN...
+ E1 E2  EN...
+ T1 T2  TN...
+ E1 E2  EN...
+Figure 3: Differences in pre-training model architectures. BERT uses a bidirectional Transformer. OpenAI GPT
+uses a left-to-right Transformer. ELMo uses the concatenation of independently trained left-to-right and right-to-
+left LSTMs to generate features for downstream tasks. Among the three, only BERT representations are jointly
+conditioned on both left and right context in all layers. In addition to the architecture differences, BERT and
+OpenAI GPT are ﬁne-tuning approaches, while ELMo is a feature-based approach.
+to converge. In Section C.1 we demonstrate that
+MLM does converge marginally slower than a left-
+to-right model (which predicts every token), but
+the empirical improvements of the MLM model
+far outweigh the increased training 
+
+---
+
+Why ""BERT""?
+BERT = Bidirectional Encoder Representations from Transformers
+Figure adapted from ""Attention is All Y ou Need"", Vaswani et al., 2017.
+Not bidirectional
+⚠
+ ",0.9166666666666666,0.9528814786672776,0.999999999975,
